@@ -23,6 +23,18 @@ typedef struct {
     char *host;
 } httpRequestOptions;
 
+httpRequestOptions* createHttpRequestOptions();
+
+httpRequestOptions* loadHttpRequestOptions(char *userAgent,
+    char *username,
+    char **headers,
+    char **cookies,
+    httpMethod method,
+    char *host
+);
+
+void freeHttpRequestOptions(httpRequestOptions* opts);
+
 void performHttpRequest(httpRequestOptions opts);
 
 httpMethod loadHttpMethod(const char *HttpMethodString);

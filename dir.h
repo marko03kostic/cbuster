@@ -1,6 +1,7 @@
 #ifndef DIR_H
 #define DIR_H
 
+#include "global.h"
 #include "httpclient.h"
 #include <stdbool.h>
 
@@ -12,7 +13,7 @@ typedef struct {
     bool expanded;
     char *extension;
     bool followRedirect;
-    bool headers;
+    char **headers;
     bool help;
     bool hideLength;
     httpMethod method;
@@ -33,11 +34,9 @@ typedef struct {
 
 DirOptions* createDirOptions();
 
-char** loadStringArray(const char *cookieString);
-
 void dirHelp();
 
-void dir(int argc, char *argv[]);
+void dir(int argc, char *argv[], GlobalOptions *globalOpts);
 
 void freeDirOptions(DirOptions *opts);
 

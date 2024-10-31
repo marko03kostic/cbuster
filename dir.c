@@ -1,4 +1,7 @@
 #include "dir.h"
+#include "global.h"
+#include "httpclient.h"
+#include "helpers.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +22,7 @@ DirOptions* createDirOptions() {
     opts->expanded = false;
     opts->extension = NULL;
     opts->followRedirect = false;
-    opts->headers = false;
+    opts->headers = NULL;
     opts->help = false;
     opts->hideLength = false;
     opts->method = HTTP_UNKNOWN;
@@ -68,7 +71,8 @@ DirOptions* loadDirOptions(int argc, char *argv[]) {
                 break;
             case 'h':
                 dirHelp();
-                break;
+                freeDirOptions(dirOpts);
+                exit(EXIT_SUCCESS);
             case 'm':
                 dirOpts->method = loadHttpMethod(optarg);
                 break;
@@ -98,9 +102,15 @@ DirOptions* loadDirOptions(int argc, char *argv[]) {
                 break;
             case '?':
                 printf("unknown option\n");
-                free(dirOpts);
+                freeDirOptions(dirOpts);
                 exit(EXIT_FAILURE);
         }
+    }
+
+    if (!dirOpts->url) {
+        fprintf(stderr, "Error: Missing required argument -u (URL)\n");
+        freeDirOptions(dirOpts);
+        exit(EXIT_FAILURE);
     }
 
     for (int index = optind; index < argc; index++) {
@@ -110,35 +120,40 @@ DirOptions* loadDirOptions(int argc, char *argv[]) {
     return dirOpts;
 }
 
-//add error handling
-char** loadStringArray(const char *inputString) {
-    char *input = strdup(inputString);
-    char *token;
-    char *delimiters = ";";
-    char **strings = malloc(100 * sizeof(char*));
-    int index = 0;
-
-    token = strtok(input, delimiters);
-    while (token != NULL && index < 100) {
-        strings[index++] = strdup(token);
-        token = strtok(NULL, delimiters);
+void freeDirOptions(DirOptions* dirOpts) {
+    if (!dirOpts) {
+        return;
     }
-    strings[index] = NULL;
 
-    free(input);
-    return strings;
+    free(dirOpts->cookies);
+    free(dirOpts->extension);
+    free(dirOpts->password);
+    free(dirOpts->proxy);
+    free(dirOpts->statusCodes);
+    free(dirOpts->statusCodesBlacklist);
+    free(dirOpts->url);
+    free(dirOpts->userAgent);
+    free(dirOpts->username);
+    
+    free(dirOpts);
+
 }
 
 void dirHelp() {
     printf("help");
 }
 
-void dir(int argc, char *argv[]) {
+void dir(int argc, char *argv[], GlobalOptions* globalOpts) {
     DirOptions* dirOpts = loadDirOptions(argc, argv);
+    
+    httpRequestOptions* httpOpts = loadHttpRequestOptions(dirOpts->userAgent,
+            dirOpts->username,
+            dirOpts->headers,
+            dirOpts->cookies,
+            dirOpts->method,
+            dirOpts->url);
 
-
-
-    free(dirOpts);
+    freeDirOptions(dirOpts);
 }
 
 
